@@ -1,0 +1,19 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+# 忽略 PANNs 预训练模型
+/PANNsTeachers/PannsPth/Cnn14_mAP%3D0.431.pth
+
+# ignore samples and data folders
+/MFCC-CNN/samples/
+/MFCC-CNN/data/
+/MFCC-CNN-OneHot/samples/
+/MFCC-CNN-OneHot/data/
+/PANNsTeachers/samples/
+/PANNsTeachers/data/
