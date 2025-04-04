@@ -7,8 +7,6 @@
 /dataSources/
 /dataSources.local.xml
 
-# 忽略 PANNs 预训练模型
-/PANNsTeachers/PannsPth/Cnn14_mAP%3D0.431.pth
 
 # ignore samples and data folders
 /MFCC-CNN/samples/
@@ -17,3 +15,4 @@
 /MFCC-CNN-OneHot/data/
 /PANNsTeachers/samples/
 /PANNsTeachers/data/
+PANNsTeachers/PannsPth/Cnn14_mAP=0.431.pth
