@@ -20,6 +20,26 @@ from sklearn.preprocessing import LabelEncoder
 torch.serialization.add_safe_globals([LabelEncoder, numpy.core.multiarray.scalar])
 
 
+def extract_labels_from_filename(filename):
+    """从文件名中提取真实标签
+    例如：Snare_808_10.wav -> drum_type=Snare, drum_machine=808
+    """
+    # 移除文件扩展名
+    base_name = os.path.splitext(os.path.basename(filename))[0]
+
+    # 按下划线分割
+    parts = base_name.split('_')
+
+    # 确保至少有两个部分
+    if len(parts) >= 2:
+        drum_type = parts[0]
+        drum_machine = parts[1]
+        return drum_type, drum_machine
+    else:
+        print(f"警告: 无法从文件名 {filename} 中提取标签")
+        return None, None
+
+
 def load_model(model_path, metadata):
     """使用元数据加载训练好的模型"""
     # 初始化模型
@@ -134,24 +154,33 @@ def process_audio_folder(folder_path, model, metadata, type_index2label, machine
     os.makedirs(results_dir, exist_ok=True)
 
     # 创建包含时间戳的CSV文件名
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%m%d_%H%M")
     folder_name = os.path.basename(os.path.normpath(folder_path))
-    csv_path = os.path.join(results_dir, f"drum_analysis_{timestamp}_{folder_name}.csv")
+    csv_path = os.path.join(results_dir, f"MFCC-OneHot_{timestamp}.csv")
 
     # 定义CSV字段名
     fieldnames = [
-        '文件名', '文件路径',
+        '文件名',
         '鼓类型', '类型置信度(%)',
         '鼓机型号', '型号置信度(%)',
         '结果组合',
+        '真实鼓类型', '类型预测正确',
+        '真实鼓机型号', '机型预测正确',
+        '整体预测正确',
         '类型候选1', '类型候选1置信度(%)',
         '类型候选2', '类型候选2置信度(%)',
         '类型候选3', '类型候选3置信度(%)',
         '机型候选1', '机型候选1置信度(%)',
         '机型候选2', '机型候选2置信度(%)',
         '机型候选3', '机型候选3置信度(%)',
-        '处理时间'
+        '处理时间', '文件路径'
     ]
+
+    # 统计指标
+    total_files = len(audio_files)
+    correct_type_count = 0
+    correct_machine_count = 0
+    correct_both_count = 0
 
     with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -160,6 +189,9 @@ def process_audio_folder(folder_path, model, metadata, type_index2label, machine
         # 使用tqdm显示进度条
         for audio_file in tqdm(audio_files, desc="分析进度"):
             process_start_time = datetime.now()
+
+            # 从文件名提取真实标签
+            true_drum_type, true_drum_machine = extract_labels_from_filename(audio_file)
 
             # 提取音频特征
             audio_tensor = prepare_audio_features(
@@ -173,10 +205,15 @@ def process_audio_folder(folder_path, model, metadata, type_index2label, machine
                 # 记录失败的文件
                 writer.writerow({
                     '文件名': os.path.basename(audio_file),
-                    '文件路径': audio_file,
                     '处理时间': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     '鼓类型': '处理失败',
-                    '鼓机型号': '处理失败'
+                    '鼓机型号': '处理失败',
+                    '真实鼓类型': true_drum_type or 'Unknown',
+                    '真实鼓机型号': true_drum_machine or 'Unknown',
+                    '类型预测正确': 'N/A',
+                    '机型预测正确': 'N/A',
+                    '整体预测正确': 'N/A',
+                    '文件路径': audio_file
                 })
                 continue
 
@@ -193,16 +230,34 @@ def process_audio_folder(folder_path, model, metadata, type_index2label, machine
                 known_type=known_type
             )
 
+            # 验证预测结果
+            type_correct = True if true_drum_type and results['drum_type'] == true_drum_type else False
+            machine_correct = True if true_drum_machine and results['drum_machine'] == true_drum_machine else False
+            both_correct = type_correct and machine_correct
+
+            # 更新统计数据
+            if type_correct:
+                correct_type_count += 1
+            if machine_correct:
+                correct_machine_count += 1
+            if both_correct:
+                correct_both_count += 1
+
             # 准备CSV行数据
             row_data = {
                 '文件名': os.path.basename(audio_file),
-                '文件路径': audio_file,
                 '鼓类型': results['drum_type'],
                 '类型置信度(%)': f"{results['type_confidence']:.2f}",
                 '鼓机型号': results['drum_machine'],
                 '型号置信度(%)': f"{results['machine_confidence']:.2f}",
                 '结果组合': f"{results['drum_type']}_{results['drum_machine']}",
-                '处理时间': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                '真实鼓类型': true_drum_type or 'Unknown',
+                '类型预测正确': '是' if type_correct else '否',
+                '真实鼓机型号': true_drum_machine or 'Unknown',
+                '机型预测正确': '是' if machine_correct else '否',
+                '整体预测正确': '是' if both_correct else '否',
+                '处理时间': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                '文件路径': audio_file
             }
 
             # 添加Top3候选项（类型）
@@ -230,7 +285,31 @@ def process_audio_folder(folder_path, model, metadata, type_index2label, machine
             # 写入CSV
             writer.writerow(row_data)
 
+        # 计算并写入总体准确率
+        type_accuracy = (correct_type_count / total_files) * 100 if total_files > 0 else 0
+        machine_accuracy = (correct_machine_count / total_files) * 100 if total_files > 0 else 0
+        overall_accuracy = (correct_both_count / total_files) * 100 if total_files > 0 else 0
+
+        # 写入摘要行
+        writer.writerow({
+            '文件名': '===== 摘要 =====',
+            '鼓类型': f'类型准确率: {type_accuracy:.2f}%',
+            '鼓机型号': f'机型准确率: {machine_accuracy:.2f}%',
+            '结果组合': f'整体准确率: {overall_accuracy:.2f}%',
+            '真实鼓类型': f'总样本数: {total_files}',
+            '类型预测正确': f'正确类型数: {correct_type_count}',
+            '真实鼓机型号': '',
+            '机型预测正确': f'正确机型数: {correct_machine_count}',
+            '整体预测正确': f'完全正确数: {correct_both_count}',
+            '文件路径': ''
+        })
+
     print(f"\n分析完成！结果保存在: {csv_path}")
+    print(f"\n===== 准确率统计 =====")
+    print(f"类型准确率: {type_accuracy:.2f}% ({correct_type_count}/{total_files})")
+    print(f"机型准确率: {machine_accuracy:.2f}% ({correct_machine_count}/{total_files})")
+    print(f"整体准确率: {overall_accuracy:.2f}% ({correct_both_count}/{total_files})")
+
     return csv_path
 
 
@@ -244,6 +323,8 @@ def main():
     parser.add_argument('--metadata', type=str, default='models/metadata.pth',
                         help='元数据文件路径')
     parser.add_argument('--known_type', type=int, help='已知的鼓类型索引（如果提供）')
+    parser.add_argument('--save-csv', action='store_true',
+                        help='对单个文件的分析结果也保存为CSV')
     args = parser.parse_args()
 
     # 检查模型和元数据文件是否存在
@@ -302,7 +383,7 @@ def main():
 
     # 根据参数选择处理单个文件或整个文件夹
     if args.audio:
-        # 处理单个音频文件（原有功能）
+        # 处理单个音频文件
         if not os.path.exists(args.audio):
             print(f"错误: 音频文件 {args.audio} 不存在")
             return
@@ -333,25 +414,41 @@ def main():
             known_type=args.known_type
         )
 
+        # 从文件名提取真实标签
+        true_drum_type, true_drum_machine = extract_labels_from_filename(args.audio)
+
+        # 验证预测结果
+        type_correct = True if true_drum_type and results['drum_type'] == true_drum_type else False
+        machine_correct = True if true_drum_machine and results['drum_machine'] == true_drum_machine else False
+        both_correct = type_correct and machine_correct
+
         # 打印结果
         print("\n===== 鼓声识别结果 =====")
         print(f"音频文件: {args.audio}")
 
         print(f"\n识别的鼓类型: {results['drum_type']} (置信度: {results['type_confidence']:.2f}%)")
+        if true_drum_type:
+            print(f"真实的鼓类型: {true_drum_type} (预测{'正确' if type_correct else '错误'})")
+
         print("可能的鼓类型:")
         for i, (drum_type, conf) in enumerate(results['top3_types'], 1):
             print(f"  {i}. {drum_type}: {conf:.2f}%")
 
         print(f"\n识别的鼓机型号: {results['drum_machine']} (置信度: {results['machine_confidence']:.2f}%)")
+        if true_drum_machine:
+            print(f"真实的鼓机型号: {true_drum_machine} (预测{'正确' if machine_correct else '错误'})")
+
         print("可能的鼓机型号:")
         for i, (machine, conf) in enumerate(results['top3_machines'], 1):
             print(f"  {i}. {machine}: {conf:.2f}%")
 
         print(f"\n最终识别结果: {results['drum_type']}_{results['drum_machine']}")
+        if true_drum_type and true_drum_machine:
+            print(f"真实组合: {true_drum_type}_{true_drum_machine}")
+            print(f"整体预测: {'正确' if both_correct else '错误'}")
 
-        # 可选：将单个文件的结果也保存为CSV
-        save_single_result = input("\n是否要保存结果到CSV文件? (y/n): ").strip().lower()
-        if save_single_result == 'y':
+        # 如果指定了保存CSV选项，保存单个文件的结果
+        if args.save_csv:
             results_dir = os.path.join(os.path.dirname(args.audio), "drum_analysis_results")
             os.makedirs(results_dir, exist_ok=True)
 
@@ -360,17 +457,20 @@ def main():
             csv_path = os.path.join(results_dir, f"drum_analysis_{timestamp}_{file_name}.csv")
 
             fieldnames = [
-                '文件名', '文件路径',
+                '文件名',
                 '鼓类型', '类型置信度(%)',
                 '鼓机型号', '型号置信度(%)',
                 '结果组合',
+                '真实鼓类型', '类型预测正确',
+                '真实鼓机型号', '机型预测正确',
+                '整体预测正确',
                 '类型候选1', '类型候选1置信度(%)',
                 '类型候选2', '类型候选2置信度(%)',
                 '类型候选3', '类型候选3置信度(%)',
                 '机型候选1', '机型候选1置信度(%)',
                 '机型候选2', '机型候选2置信度(%)',
                 '机型候选3', '机型候选3置信度(%)',
-                '处理时间'
+                '处理时间', '文件路径'
             ]
 
             with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
@@ -379,13 +479,18 @@ def main():
 
                 row_data = {
                     '文件名': os.path.basename(args.audio),
-                    '文件路径': args.audio,
                     '鼓类型': results['drum_type'],
                     '类型置信度(%)': f"{results['type_confidence']:.2f}",
                     '鼓机型号': results['drum_machine'],
                     '型号置信度(%)': f"{results['machine_confidence']:.2f}",
                     '结果组合': f"{results['drum_type']}_{results['drum_machine']}",
-                    '处理时间': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    '真实鼓类型': true_drum_type or 'Unknown',
+                    '类型预测正确': '是' if type_correct else '否',
+                    '真实鼓机型号': true_drum_machine or 'Unknown',
+                    '机型预测正确': '是' if machine_correct else '否',
+                    '整体预测正确': '是' if both_correct else '否',
+                    '处理时间': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    '文件路径': args.audio
                 }
 
                 # 添加Top3候选项（类型）
@@ -415,7 +520,7 @@ def main():
             print(f"结果已保存到: {csv_path}")
 
     elif args.folder:
-        # 处理整个文件夹的音频文件（新功能）
+        # 处理整个文件夹的音频文件
         if not os.path.exists(args.folder) or not os.path.isdir(args.folder):
             print(f"错误: 文件夹 {args.folder} 不存在或不是一个目录")
             return
