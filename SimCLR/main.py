@@ -156,7 +156,7 @@ def process_audio_folder(folder_path, model, metadata, type_index2label, machine
     # 创建包含时间戳的CSV文件名
     timestamp = datetime.now().strftime("%m%d_%H%M")
     folder_name = os.path.basename(os.path.normpath(folder_path))
-    csv_path = os.path.join(results_dir, f"MFCC-OneHot_{timestamp}.csv")
+    csv_path = os.path.join(results_dir, f"SimCLR_{timestamp}.csv")
 
     # 定义CSV字段名
     fieldnames = [
@@ -318,9 +318,9 @@ def main():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--audio', type=str, help='单个音频文件路径')
     group.add_argument('--folder', type=str, help='包含多个音频文件的文件夹路径')
-    parser.add_argument('--model', type=str, default='models/DrumClassifier_TypeEnhanced_2025-04-03_v1.pth',
+    parser.add_argument('--model', type=str, default='models/DrumClassifier_SimCLR_2025-04-05_v1.pth',
                         help='模型文件路径')
-    parser.add_argument('--metadata', type=str, default='models/metadata.pth',
+    parser.add_argument('--metadata', type=str, default='models/metadata_simclr.pth',
                         help='元数据文件路径')
     parser.add_argument('--known_type', type=int, help='已知的鼓类型索引（如果提供）')
     parser.add_argument('--save-csv', action='store_true',
