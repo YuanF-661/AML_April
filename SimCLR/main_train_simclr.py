@@ -8,14 +8,134 @@ from simclr import DrumClassifierWithSimCLR, NT_Xent, prepare_simclr_data, simcl
 import config
 from datetime import datetime
 from torch.utils.data import random_split
+import torch.nn.functional as F
+import numpy as np
+from torch.utils.data import Dataset, DataLoader
 
 # 从环境变量读取训练参数
 SIMCLR_EPOCHS = int(os.environ.get('SIMCLR_EPOCHS', 50))
 FT_EPOCHS = int(os.environ.get('FT_EPOCHS', 20))
 BATCH_SIZE = int(os.environ.get('BATCH_SIZE', config.batch_size))
-TEMPERATURE = float(os.environ.get('TEMPERATURE', 0.5))
+TEMPERATURE = float(os.environ.get('TEMPERATURE', 0.2))
 SKIP_PRETRAIN = os.environ.get('SKIP_PRETRAIN', '0') == '1'
 SIMCLR_ONLY = os.environ.get('SIMCLR_ONLY', '0') == '1'
+
+
+def gradual_unfreeze_finetune(model, train_dataset, val_dataset, epochs, use_type_onehot=True):
+    """渐进式解冻微调模型"""
+    print("\n===== 开始渐进式解冻微调 =====")
+
+    # 先冻结所有参数
+    for param in model.parameters():
+        param.requires_grad = False
+
+    # 第一阶段：只训练分类头
+    for param in model.fc_drum_type.parameters():
+        param.requires_grad = True
+    for param in model.fc_drum_machine.parameters():
+        param.requires_grad = True
+
+    print("阶段1：只训练分类头")
+    train(model, train_dataset, val_dataset,
+          num_epochs=epochs // 3,
+          learning_rate=0.001,
+          use_type_onehot=use_type_onehot)
+
+    # 第二阶段：解冻共享FC层
+    for param in model.fc_shared.parameters():
+        param.requires_grad = True
+
+    print("阶段2：训练共享FC层和分类头")
+    train(model, train_dataset, val_dataset,
+          num_epochs=epochs // 3,
+          learning_rate=0.0005,
+          use_type_onehot=use_type_onehot)
+
+    # 第三阶段：解冻所有层
+    for param in model.parameters():
+        param.requires_grad = True
+
+    print("阶段3：微调整个模型")
+    return train(model, train_dataset, val_dataset,
+                 num_epochs=epochs // 3,
+                 learning_rate=0.0001,
+                 use_type_onehot=use_type_onehot)
+
+
+def visualize_features(model, test_dataset, metadata, save_path='results/feature_visualization.png'):
+    """可视化学习到的特征"""
+    from sklearn.manifold import TSNE
+    import matplotlib.pyplot as plt
+
+    # 创建数据加载器
+    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+
+    # 收集特征和标签
+    features = []
+    type_labels = []
+    machine_labels = []
+
+    model.eval()
+    with torch.no_grad():
+        for batch in test_loader:
+            if len(batch[1]) == 3:
+                inputs, (type_ids, machine_ids, _) = batch
+            else:
+                inputs, (type_ids, machine_ids) = batch
+
+            # 获取特征
+            if hasattr(model, '_get_features'):
+                batch_features = model._get_features(inputs)
+            else:
+                # 兼容不同模型结构
+                if inputs.dim() == 3:
+                    inputs = inputs.unsqueeze(1)
+                x = model.pool(F.relu(model.conv1(inputs)))
+                x = model.pool(F.relu(model.conv2(x)))
+                x = model.pool(F.relu(model.conv3(x)))
+                x = x.view(x.size(0), -1)
+                batch_features = F.relu(model.fc_shared(x))
+
+            features.append(batch_features)
+            type_labels.append(type_ids)
+            machine_labels.append(machine_ids)
+
+    # 合并所有批次
+    features = torch.cat(features, dim=0)
+    type_labels = torch.cat(type_labels, dim=0)
+    machine_labels = torch.cat(machine_labels, dim=0)
+
+    # 转换为numpy
+    features = features.cpu().numpy()
+    type_labels = type_labels.cpu().numpy()
+    machine_labels = machine_labels.cpu().numpy()
+
+    # 使用t-SNE降维
+    tsne = TSNE(n_components=2, random_state=42)
+    features_2d = tsne.fit_transform(features)
+
+    # 创建可视化图
+    plt.figure(figsize=(12, 10))
+
+    # 按鼓类型绘制
+    plt.subplot(1, 2, 1)
+    for i, type_id in enumerate(np.unique(type_labels)):
+        mask = type_labels == type_id
+        plt.scatter(features_2d[mask, 0], features_2d[mask, 1], label=metadata['type_index2label'][type_id])
+    plt.title('Feature Distribution (drum type)')
+    plt.legend()
+
+    # 按鼓机型号绘制
+    plt.subplot(1, 2, 2)
+    for i, machine_id in enumerate(np.unique(machine_labels)):
+        mask = machine_labels == machine_id
+        plt.scatter(features_2d[mask, 0], features_2d[mask, 1], label=metadata['machine_index2label'][machine_id])
+    plt.title('Feature Distribution (drum machine)')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig(save_path)
+    print(f"特征可视化已保存至: {save_path}")
 
 
 def main():
@@ -183,14 +303,12 @@ def main():
 
     # ======== 监督训练阶段 ========
     print("\n===== 开始监督训练阶段 =====")
-    # 训练模型
-    print("\n使用预训练权重微调模型...")
-    train_metrics = train(
+    # 使用渐进式解冻微调替代普通训练
+    train_metrics = gradual_unfreeze_finetune(
         classifier_model,
         train_dataset,
         val_dataset,
-        num_epochs=FT_EPOCHS,  # 使用环境变量中的微调轮数
-        learning_rate=config.learning_rate * 0.1,  # 降低学习率进行微调
+        epochs=FT_EPOCHS,
         use_type_onehot=use_enhanced_dataset
     )
 
@@ -266,6 +384,10 @@ def main():
     print(f"鼓类型识别准确率: {test_results['type_accuracy']:.2f}%")
     print(f"鼓机型号识别准确率: {test_results['machine_accuracy']:.2f}%")
     print("训练完成!")
+
+    # 添加特征可视化
+    print("\n可视化模型学习的特征...")
+    visualize_features(classifier_model, test_dataset, model_metadata)
 
 
 if __name__ == "__main__":

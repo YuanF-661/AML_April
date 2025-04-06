@@ -16,7 +16,19 @@ def train(model, train_dataset, val_dataset, num_epochs=20, learning_rate=0.001,
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
     # 定义优化器和损失函数
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5)
+
+    # 添加学习率调度器 - 当验证损失停止改善时降低学习率
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode='min',
+        factor=0.5,  # 学习率减半
+        patience=3,  # 等待3个epoch无改善
+        verbose=True,
+        min_lr=1e-6  # 最小学习率
+    )
+
+    # 损失函数
     criterion = nn.CrossEntropyLoss()
 
     # 保存训练过程中的指标
@@ -24,6 +36,10 @@ def train(model, train_dataset, val_dataset, num_epochs=20, learning_rate=0.001,
     val_losses = []
     val_type_accuracies = []
     val_machine_accuracies = []
+
+    # 记录最佳模型
+    best_val_loss = float('inf')
+    best_model_state = None
 
     # 训练循环
     for epoch in range(num_epochs):
@@ -33,7 +49,15 @@ def train(model, train_dataset, val_dataset, num_epochs=20, learning_rate=0.001,
         machine_correct = 0
         total_samples = 0
 
-        for batch in train_loader:
+        # 使用tqdm显示进度条（如果可用）
+        try:
+            from tqdm import tqdm
+            loop = tqdm(train_loader, desc=f"Epoch {epoch + 1}/{num_epochs}")
+        except ImportError:
+            loop = train_loader
+            print(f"Epoch {epoch + 1}/{num_epochs} 开始训练...")
+
+        for batch in loop:
             optimizer.zero_grad()
 
             # 根据是否使用one-hot编码处理不同的数据格式
@@ -53,10 +77,16 @@ def train(model, train_dataset, val_dataset, num_epochs=20, learning_rate=0.001,
             # 计算损失
             type_loss = criterion(type_outputs, type_labels)
             machine_loss = criterion(machine_outputs, machine_labels)
-            loss = type_loss + machine_loss  # 可以调整权重，例如 0.4*type_loss + 0.6*machine_loss
+
+            # 可以调整权重来平衡两个任务的学习
+            loss = 0.5 * type_loss + 0.5 * machine_loss
 
             # 反向传播
             loss.backward()
+
+            # 梯度裁剪，防止梯度爆炸
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
             optimizer.step()
 
             total_loss += loss.item()
@@ -67,6 +97,12 @@ def train(model, train_dataset, val_dataset, num_epochs=20, learning_rate=0.001,
             type_correct += (type_preds == type_labels).sum().item()
             machine_correct += (machine_preds == machine_labels).sum().item()
             total_samples += type_labels.size(0)
+
+            # 更新进度条
+            if hasattr(loop, 'set_postfix'):
+                loop.set_postfix(loss=loss.item(),
+                                 type_acc=100 * type_correct / max(1, total_samples),
+                                 machine_acc=100 * machine_correct / max(1, total_samples))
 
         avg_train_loss = total_loss / len(train_loader)
         train_type_accuracy = 100 * type_correct / total_samples
@@ -102,16 +138,16 @@ def train(model, train_dataset, val_dataset, num_epochs=20, learning_rate=0.001,
                     type_outputs, machine_outputs_with_pred = model(inputs)
                     machine_outputs_with_true = machine_outputs_with_pred  # 此时二者相同
 
-                # 使用预测的drum_type概率计算损失
+                # 计算损失 - 使用预测的drum_type概率
                 type_loss = criterion(type_outputs, type_labels)
                 machine_loss = criterion(machine_outputs_with_pred, machine_labels)
-                loss = type_loss + machine_loss
+                loss = 0.5 * type_loss + 0.5 * machine_loss
 
                 val_loss += loss.item()
 
-                # 计算准确率 - 使用带有真实drum_type的预测
+                # 计算准确率 - 使用预测的drum_type的预测
                 _, type_preds = torch.max(type_outputs, 1)
-                _, machine_preds = torch.max(machine_outputs_with_pred, 1)  # 使用预测的drum_type
+                _, machine_preds = torch.max(machine_outputs_with_pred, 1)
 
                 val_type_correct += (type_preds == type_labels).sum().item()
                 val_machine_correct += (machine_preds == machine_labels).sum().item()
@@ -125,37 +161,49 @@ def train(model, train_dataset, val_dataset, num_epochs=20, learning_rate=0.001,
         val_type_accuracies.append(val_type_accuracy)
         val_machine_accuracies.append(val_machine_accuracy)
 
+        # 更新学习率
+        scheduler.step(avg_val_loss)
+
+        # 保存最佳模型
+        if avg_val_loss < best_val_loss:
+            best_val_loss = avg_val_loss
+            best_model_state = model.state_dict().copy()
+            print(f">>> 更新最佳模型 (新的验证损失: {best_val_loss:.4f})")
+
         print(f"Epoch {epoch + 1}/{num_epochs}: "
-              f"Train Loss = {avg_train_loss:.4f}, "
-              f"Type Acc = {train_type_accuracy:.2f}%, "
-              f"Machine Acc = {train_machine_accuracy:.2f}%, "
-              f"Val Loss = {avg_val_loss:.4f}, "
-              f"Val Type Acc = {val_type_accuracy:.2f}%, "
-              f"Val Machine Acc = {val_machine_accuracy:.2f}%")
+              f"学习率 = {optimizer.param_groups[0]['lr']:.6f}, "
+              f"训练损失 = {avg_train_loss:.4f}, "
+              f"类型准确率 = {train_type_accuracy:.2f}%, "
+              f"机型准确率 = {train_machine_accuracy:.2f}%, "
+              f"验证损失 = {avg_val_loss:.4f}, "
+              f"验证类型准确率 = {val_type_accuracy:.2f}%, "
+              f"验证机型准确率 = {val_machine_accuracy:.2f}%")
 
-    # [绘制训练曲线代码与原始代码相同，此处省略]
-
+    # 训练完成后恢复最佳模型
+    if best_model_state is not None:
+        model.load_state_dict(best_model_state)
+        print(f"已恢复最佳模型，验证损失: {best_val_loss:.4f}")
 
     # 绘制训练曲线
     os.makedirs('results', exist_ok=True)
 
     # 损失曲线
     plt.figure(figsize=(10, 6))
-    plt.plot(train_losses, label='Training Loss')
-    plt.plot(val_losses, label='Validation Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Training and Validation Loss')
+    plt.plot(train_losses, label='训练损失')
+    plt.plot(val_losses, label='验证损失')
+    plt.xlabel('轮次')
+    plt.ylabel('损失')
+    plt.title('训练和验证损失')
     plt.legend()
     plt.savefig('results/training_loss.png')
 
     # 准确率曲线
     plt.figure(figsize=(10, 6))
-    plt.plot(val_type_accuracies, label='Drum Type Accuracy')
-    plt.plot(val_machine_accuracies, label='Drum Machine Accuracy')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy (%)')
-    plt.title('Validation Accuracy')
+    plt.plot(val_type_accuracies, label='鼓类型准确率')
+    plt.plot(val_machine_accuracies, label='鼓机型号准确率')
+    plt.xlabel('轮次')
+    plt.ylabel('准确率 (%)')
+    plt.title('验证准确率')
     plt.legend()
     plt.savefig('results/validation_accuracy.png')
 
@@ -163,7 +211,8 @@ def train(model, train_dataset, val_dataset, num_epochs=20, learning_rate=0.001,
         'train_losses': train_losses,
         'val_losses': val_losses,
         'val_type_accuracies': val_type_accuracies,
-        'val_machine_accuracies': val_machine_accuracies
+        'val_machine_accuracies': val_machine_accuracies,
+        'best_val_loss': best_val_loss
     }
 
 def evaluate_model(model, test_dataset, metadata, use_type_onehot=True):

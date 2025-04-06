@@ -30,42 +30,37 @@ class SimCLRDataTransform:
         return augmented_samples
 
     def _augment_mfcc(self, mfcc):
-        """对MFCC特征进行随机增强"""
-        # 转换为numpy进行处理
-        if isinstance(mfcc, torch.Tensor):
-            mfcc_np = mfcc.numpy()
-        else:
-            mfcc_np = mfcc.copy()
+        # Current version randomly chooses ONE augmentation
+        # Try applying MULTIPLE augmentations with varying probabilities
+        mfcc_np = mfcc.numpy() if isinstance(mfcc, torch.Tensor) else mfcc.copy()
 
-        # 随机应用以下增强之一
-        augmentation_type = np.random.choice([
-            'frequency_mask',
-            'time_mask',
-            'noise',
-            'none'
-        ], p=[0.3, 0.3, 0.3, 0.1])
+        # Apply pitch shift (simulation for MFCC)
+        if np.random.random() < 0.5:
+            shift = np.random.uniform(-2, 2)
+            # Shift MFCC along frequency axis slightly
+            if shift > 0:
+                mfcc_np = np.pad(mfcc_np, ((0, 0), (0, 1)), mode='constant')[:, 1:]
+            else:
+                mfcc_np = np.pad(mfcc_np, ((0, 0), (1, 0)), mode='constant')[:, :-1]
 
-        if augmentation_type == 'frequency_mask':
-            # 频率掩码：在频率维度上随机遮挡一段
-            f_width = np.random.randint(1, mfcc_np.shape[0] // 3)
-            f_start = np.random.randint(0, mfcc_np.shape[0] - f_width)
-            mfcc_np[f_start:f_start + f_width, :] = 0
-
-        elif augmentation_type == 'time_mask':
-            # 时间掩码：在时间维度上随机遮挡一段
-            t_width = np.random.randint(1, mfcc_np.shape[1] // 3)
+        # Apply time masking with probability
+        if np.random.random() < 0.7:
+            t_width = np.random.randint(1, max(2, mfcc_np.shape[1] // 5))
             t_start = np.random.randint(0, mfcc_np.shape[1] - t_width)
             mfcc_np[:, t_start:t_start + t_width] = 0
 
-        elif augmentation_type == 'noise':
-            # 添加高斯噪声
-            noise = np.random.normal(0, 0.1, mfcc_np.shape)
+        # Apply frequency masking with probability
+        if np.random.random() < 0.7:
+            f_width = np.random.randint(1, max(2, mfcc_np.shape[0] // 5))
+            f_start = np.random.randint(0, mfcc_np.shape[0] - f_width)
+            mfcc_np[f_start:f_start + f_width, :] = 0
+
+        # Apply milder noise with probability
+        if np.random.random() < 0.5:
+            noise = np.random.normal(0, 0.05, mfcc_np.shape)
             mfcc_np = mfcc_np + noise
 
-        # 转回tensor
-        if isinstance(mfcc, torch.Tensor):
-            return torch.tensor(mfcc_np, dtype=torch.float32)
-        return mfcc_np
+        return torch.tensor(mfcc_np, dtype=torch.float32) if isinstance(mfcc, torch.Tensor) else mfcc_np
 
 
 class DrumMFCCSimCLRDataset(Dataset):
@@ -90,33 +85,26 @@ class DrumMFCCSimCLRDataset(Dataset):
 
 class NT_Xent(nn.Module):
     """
-    归一化温度-缩放交叉熵损失函数
-    基于 SimCLR 中描述的自监督对比损失
+    改进的归一化温度-缩放交叉熵损失函数
     """
 
-    def __init__(self, batch_size, temperature=0.5, device='cpu'):
+    def __init__(self, batch_size, temperature=0.1, device='cpu'):
         super(NT_Xent, self).__init__()
         self.batch_size = batch_size
         self.temperature = temperature
         self.device = device
-
-        # 创建一个mask用于找出正样本对
-        self.mask = self._get_correlated_mask().to(device)
         self.criterion = nn.CrossEntropyLoss(reduction="sum")
         self.similarity_f = nn.CosineSimilarity(dim=2)
 
-    def _get_correlated_mask(self):
-        # 二维的布尔mask
-        mask = torch.ones((self.batch_size * 2, self.batch_size * 2), dtype=bool)
-
+    def _get_correlated_mask(self, batch_size):
+        # 二维的布尔mask，支持动态批次大小
+        mask = torch.ones((batch_size * 2, batch_size * 2), dtype=bool)
         # 设置对角线为False（自身的相似度）
         mask.fill_diagonal_(False)
-
         # 标记正样本对的位置
-        for i in range(self.batch_size):
-            mask[i, self.batch_size + i] = False
-            mask[self.batch_size + i, i] = False
-
+        for i in range(batch_size):
+            mask[i, batch_size + i] = False
+            mask[batch_size + i, i] = False
         return mask
 
     def forward(self, z_i, z_j):
@@ -124,42 +112,50 @@ class NT_Xent(nn.Module):
         Args:
             z_i, z_j: 两个视角下的特征表示 [batch_size, dim]
         """
+        # 获取实际批次大小
+        batch_size = z_i.size(0)
+
+        # 创建适合当前批次大小的mask
+        mask = self._get_correlated_mask(batch_size).to(self.device)
+
         # 计算批次内所有样本对之间的相似度
         p = torch.cat([z_i, z_j], dim=0)  # [2*batch_size, dim]
 
         # 计算相似度矩阵
-        sim = self.similarity_f(p.unsqueeze(1), p.unsqueeze(0)) / self.temperature  # [2*batch_size, 2*batch_size]
+        sim = self.similarity_f(p.unsqueeze(1), p.unsqueeze(0)) / self.temperature
 
         # 只考虑负样本对的相似度
-        sim_i_j = torch.diag(sim, self.batch_size)
-        sim_j_i = torch.diag(sim, -self.batch_size)
+        sim_i_j = torch.diag(sim, batch_size)
+        sim_j_i = torch.diag(sim, -batch_size)
 
         # 正样本对
-        positive_samples = torch.cat([sim_i_j, sim_j_i], dim=0).reshape(2 * self.batch_size, 1)
+        positive_samples = torch.cat([sim_i_j, sim_j_i], dim=0).reshape(2 * batch_size, 1)
 
         # 负样本对 - 应用mask以仅选择负样本
-        negative_samples = sim[self.mask].reshape(2 * self.batch_size, -1)
+        negative_samples = sim[mask].reshape(2 * batch_size, -1)
 
         # 标签总是指向正样本
-        labels = torch.zeros(2 * self.batch_size, device=self.device).long()
+        labels = torch.zeros(2 * batch_size, device=self.device).long()
 
         # 正样本和负样本连接在一起
         logits = torch.cat([positive_samples, negative_samples], dim=1)
         loss = self.criterion(logits, labels)
-        loss /= (2 * self.batch_size)
+        loss /= (2 * batch_size)
 
         return loss
 
 
 class SimCLRProjectionHead(nn.Module):
-    """SimCLR的投影头，将特征映射到对比学习空间"""
-
-    def __init__(self, in_features, hidden_dim=256, out_dim=128):
+    def __init__(self, in_features, hidden_dim=512, out_dim=128):
         super(SimCLRProjectionHead, self).__init__()
         self.projection = nn.Sequential(
             nn.Linear(in_features, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, out_dim)
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.BatchNorm1d(hidden_dim // 2),
+            nn.ReLU(),
+            nn.Linear(hidden_dim // 2, out_dim)
         )
 
     def forward(self, x):

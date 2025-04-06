@@ -6,9 +6,9 @@ from datetime import datetime
 
 def main():
     parser = argparse.ArgumentParser(description='鼓声识别器 - SimCLR预训练与训练（CPU版本）')
-    parser.add_argument('--simclr_epochs', type=int, default=20, help='SimCLR预训练轮数')
-    parser.add_argument('--ft_epochs', type=int, default=10, help='监督微调轮数')
-    parser.add_argument('--batch_size', type=int, default=16, help='批次大小')
+    parser.add_argument('--simclr_epochs', type=int, default=25, help='SimCLR预训练轮数')
+    parser.add_argument('--ft_epochs', type=int, default=25, help='监督微调轮数')
+    parser.add_argument('--batch_size', type=int, default=32, help='批次大小')
     parser.add_argument('--data_folder', type=str, default=None, help='数据集路径')
     parser.add_argument('--no_pretrain', action='store_true', help='跳过SimCLR预训练阶段')
     parser.add_argument('--simclr_only', action='store_true', help='只进行SimCLR预训练，不微调')
