@@ -1,0 +1,39 @@
+{
+  "os": "macOS-15.3.1-arm64-arm-64bit",
+  "python": "CPython 3.12.7",
+  "startedAt": "2025-04-03T16:21:38.264443Z",
+  "program": "/Users/rifi_2001/Documents/Python Projects/AML_DrumIdentifier_April-v1/MFCC-CNN-OneHot/main_train.py",
+  "codePath": "main_train.py",
+  "email": "yuanfeng2001@hotmail.com",
+  "root": "/Users/rifi_2001/Documents/Python Projects/AML_DrumIdentifier_April-v1/MFCC-CNN-OneHot",
+  "host": "YuandeMacBook-Pro-5.local",
+  "executable": "/opt/anaconda3/bin/python",
+  "codePathLocal": "main_train.py",
+  "cpu_count": 12,
+  "cpu_count_logical": 12,
+  "disk": {
+    "/": {
+      "total": "994662584320",
+      "used": "666219393024"
+    },
+    "/System/Volumes/Data": {
+      "total": "994662584320",
+      "used": "666219393024"
+    }
+  },
+  "memory": {
+    "total": "19327352832"
+  },
+  "cpu": {
+    "count": 12,
+    "countLogical": 12
+  },
+  "apple": {
+    "name": "Apple M3 Pro",
+    "ecpuCores": 6,
+    "pcpuCores": 6,
+    "gpuCores": 18,
+    "memoryGb": 18,
+    "ramTotalBytes": "19327352832"
+  }
+}
