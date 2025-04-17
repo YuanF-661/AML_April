@@ -131,7 +131,7 @@ def predict_drum(model, audio_tensor, type_index2label, machine_index2label, use
         }
 
 
-def process_audio_folder(folder_path, model, metadata, type_index2label, machine_index2label, known_type=None):
+def process_audio_folder(folder_path, model, metadata, type_index2label, machine_index2label, model_path, known_type=None):
     """处理文件夹中的所有音频文件并输出到单个CSV文件"""
     # 支持的音频文件扩展名
     audio_extensions = ['.wav', '.mp3', '.flac', '.ogg', '.aiff', '.aif']
@@ -173,7 +173,8 @@ def process_audio_folder(folder_path, model, metadata, type_index2label, machine
         '机型候选1', '机型候选1置信度(%)',
         '机型候选2', '机型候选2置信度(%)',
         '机型候选3', '机型候选3置信度(%)',
-        '处理时间', '文件路径'
+        '处理时间', '文件路径',
+        '模型名称', '模型路径'  # 添加这一行
     ]
 
     # 统计指标
@@ -213,7 +214,9 @@ def process_audio_folder(folder_path, model, metadata, type_index2label, machine
                     '类型预测正确': 'N/A',
                     '机型预测正确': 'N/A',
                     '整体预测正确': 'N/A',
-                    '文件路径': audio_file
+                    '文件路径': audio_file,
+                    '模型名称': os.path.basename(model_path),  # 添加模型名称
+                    '模型路径': model_path  # 添加模型路径
                 })
                 continue
 
@@ -257,7 +260,9 @@ def process_audio_folder(folder_path, model, metadata, type_index2label, machine
                 '机型预测正确': '是' if machine_correct else '否',
                 '整体预测正确': '是' if both_correct else '否',
                 '处理时间': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                '文件路径': audio_file
+                '文件路径': audio_file,
+                '模型名称': os.path.basename(model_path),  # 添加模型名称
+                '模型路径': model_path  # 添加模型路径
             }
 
             # 添加Top3候选项（类型）
@@ -301,7 +306,9 @@ def process_audio_folder(folder_path, model, metadata, type_index2label, machine
             '真实鼓机型号': '',
             '机型预测正确': f'正确机型数: {correct_machine_count}',
             '整体预测正确': f'完全正确数: {correct_both_count}',
-            '文件路径': ''
+            '文件路径': '',
+            '模型名称': os.path.basename(model_path),  # 添加模型名称
+            '模型路径': model_path  # 添加模型路径
         })
 
     print(f"\n分析完成！结果保存在: {csv_path}")
@@ -318,7 +325,7 @@ def main():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--audio', type=str, help='单个音频文件路径')
     group.add_argument('--folder', type=str, help='包含多个音频文件的文件夹路径')
-    parser.add_argument('--model', type=str, default='models/DrumClassifier_SimCLR_2025-04-05_v1.pth',
+    parser.add_argument('--model', type=str, default='models/DrumClassifier_SimCLR_2025-04-06_v2.pth',
                         help='模型文件路径')
     parser.add_argument('--metadata', type=str, default='models/metadata_simclr.pth',
                         help='元数据文件路径')
@@ -470,7 +477,8 @@ def main():
                 '机型候选1', '机型候选1置信度(%)',
                 '机型候选2', '机型候选2置信度(%)',
                 '机型候选3', '机型候选3置信度(%)',
-                '处理时间', '文件路径'
+                '处理时间', '文件路径',
+                '模型名称', '模型路径'
             ]
 
             with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
@@ -490,7 +498,9 @@ def main():
                     '机型预测正确': '是' if machine_correct else '否',
                     '整体预测正确': '是' if both_correct else '否',
                     '处理时间': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    '文件路径': args.audio
+                    '文件路径': args.audio,
+                    '模型名称': os.path.basename(model_path),  # 添加模型名称
+                    '模型路径': model_path  # 添加模型路径
                 }
 
                 # 添加Top3候选项（类型）
@@ -531,6 +541,7 @@ def main():
             metadata,
             type_index2label,
             machine_index2label,
+            model_path,  # 添加此参数
             args.known_type
         )
 
