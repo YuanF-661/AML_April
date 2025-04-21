@@ -4,27 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="25f164f3-5015-4f69-b19a-008dc46e22f9" name="Changes" comment="0405-17:13">
-      <change afterPath="$PROJECT_DIR$/SimCLR/models/DrumClassifier_SimCLR_2025-04-06_v1.pth" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/SimCLR/models/DrumClassifier_SimCLR_pretrained_20250406.pth" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/SimCLR/results/feature_visualization.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/drum_analysis_results/MFCC-OneHot_0406_1400.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/drum_analysis_results/MFCC_0406_1400.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/drum_analysis_results/MFCC_0406_1401.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/drum_analysis_results/PANNS_0406_1400.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/drum_analysis_results/PANNS_0406_1401.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/drum_analysis_results/SimCLR_0406_1359.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/drum_analysis_results/SimCLR_0406_1401.csv" afterDir="false" />
+    <list default="true" id="25f164f3-5015-4f69-b19a-008dc46e22f9" name="Changes" comment="0417-17:39">
+      <change afterPath="$PROJECT_DIR$/drum_analysis_results/MFCC_0406_1523.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/drum_analysis_results/SimCLR_0406_1448.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/drum_analysis_results/SimCLR_0406_1507.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/drum_analysis_results/SimCLR_0406_1524.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SimCLR/main_train_simclr.py" beforeDir="false" afterPath="$PROJECT_DIR$/SimCLR/main_train_simclr.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SimCLR/models/metadata_simclr.pth" beforeDir="false" afterPath="$PROJECT_DIR$/SimCLR/models/metadata_simclr.pth" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SimCLR/results/machine_confusion_matrix.png" beforeDir="false" afterPath="$PROJECT_DIR$/SimCLR/results/machine_confusion_matrix.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SimCLR/results/training_loss.png" beforeDir="false" afterPath="$PROJECT_DIR$/SimCLR/results/training_loss.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SimCLR/results/type_confusion_matrix.png" beforeDir="false" afterPath="$PROJECT_DIR$/SimCLR/results/type_confusion_matrix.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SimCLR/results/validation_accuracy.png" beforeDir="false" afterPath="$PROJECT_DIR$/SimCLR/results/validation_accuracy.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SimCLR/run_simclr_training_cpu.py" beforeDir="false" afterPath="$PROJECT_DIR$/SimCLR/run_simclr_training_cpu.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SimCLR/simclr.py" beforeDir="false" afterPath="$PROJECT_DIR$/SimCLR/simclr.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SimCLR/train_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/SimCLR/train_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MFCC-CNN/dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/MFCC-CNN/dataset.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,6 +53,16 @@
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/YuanF-661/AML_April.git&quot;,
     &quot;accountId&quot;: &quot;904d41f2-f2ac-4ec0-9741-162b4fcb8396&quot;
+  },
+  &quot;recentNewPullRequestHead&quot;: {
+    &quot;server&quot;: {
+      &quot;useHttp&quot;: false,
+      &quot;host&quot;: &quot;github.com&quot;,
+      &quot;port&quot;: null,
+      &quot;suffix&quot;: null
+    },
+    &quot;owner&quot;: &quot;YuanF-661&quot;,
+    &quot;repository&quot;: &quot;AML_April&quot;
   }
 }</component>
   <component name="ProjectColorInfo">{
@@ -80,44 +76,44 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "Python.distill_train.executor": "Run",
-    "Python.evaluate_distill.executor": "Run",
-    "Python.main (1).executor": "Run",
-    "Python.main (MFCC).executor": "Run",
-    "Python.main (One-Hot).executor": "Run",
-    "Python.main (SimCLR).executor": "Run",
-    "Python.main(One-Hot).executor": "Run",
-    "Python.main(PANNs).executor": "Run",
-    "Python.main(distill).executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.main_onehot.executor": "Run",
-    "Python.main_train (1).executor": "Run",
-    "Python.main_train.executor": "Run",
-    "Python.main_train_simclr.executor": "Run",
-    "Python.run_simclr_training.executor": "Run",
-    "Python.run_simclr_training_cpu.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "Fred",
-    "last_opened_file_path": "/Users/rifi_2001/Documents/Python Projects/AML_DrumIdentifier_April-v1",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "vcs.Git",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;Python.distill_train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.evaluate_distill.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.main (MFCC).executor&quot;: &quot;Run&quot;,
+    &quot;Python.main (One-Hot).executor&quot;: &quot;Run&quot;,
+    &quot;Python.main (SimCLR).executor&quot;: &quot;Run&quot;,
+    &quot;Python.main(One-Hot).executor&quot;: &quot;Run&quot;,
+    &quot;Python.main(PANNs).executor&quot;: &quot;Run&quot;,
+    &quot;Python.main(distill).executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main_onehot.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main_train (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.main_train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main_train_simclr.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run_simclr_training.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run_simclr_training_cpu.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#1 on Fred&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/rifi_2001/Documents/Python Projects/AML_DrumIdentifier_April-v1&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;vcs.Git&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main_train_simclr">
+  <component name="RunManager" selected="Python.main (SimCLR)">
     <configuration name="main (SimCLR)" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="AML_DrumIdentifier_April-v1" />
       <option name="ENV_FILES" value="" />
@@ -234,18 +230,18 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.main_train_simclr" />
       <item itemvalue="Python.main (SimCLR)" />
       <item itemvalue="Python.main" />
       <item itemvalue="Python.main(One-Hot)" />
       <item itemvalue="Python.main(PANNs)" />
+      <item itemvalue="Python.main_train_simclr" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.main_train_simclr" />
-        <item itemvalue="Python.main(PANNs)" />
         <item itemvalue="Python.main (SimCLR)" />
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.main_train_simclr" />
+        <item itemvalue="Python.main(PANNs)" />
         <item itemvalue="Python.main(One-Hot)" />
       </list>
     </recent_temporary>
@@ -274,7 +270,9 @@
       <workItem from="1743795405441" duration="1435000" />
       <workItem from="1743858551437" duration="2526000" />
       <workItem from="1743863380726" duration="6235000" />
-      <workItem from="1743944291377" duration="2122000" />
+      <workItem from="1743944291377" duration="5149000" />
+      <workItem from="1744581339985" duration="14000" />
+      <workItem from="1744907875516" duration="383000" />
     </task>
     <task id="LOCAL-00001" summary="0404">
       <option name="closed" value="true" />
@@ -340,7 +338,23 @@
       <option name="project" value="LOCAL" />
       <updated>1743869620030</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="0406-14:34">
+      <option name="closed" value="true" />
+      <created>1743946465629</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1743946465629</updated>
+    </task>
+    <task id="LOCAL-00010" summary="0417-17:39">
+      <option name="closed" value="true" />
+      <created>1744907955347</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1744907955347</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -366,13 +380,15 @@
     <MESSAGE value="0405-16:42" />
     <MESSAGE value="0405-16:45 SimCLR" />
     <MESSAGE value="0405-17:13" />
-    <option name="LAST_COMMIT_MESSAGE" value="0405-17:13" />
+    <MESSAGE value="0406-14:34" />
+    <MESSAGE value="0417-17:39" />
+    <option name="LAST_COMMIT_MESSAGE" value="0417-17:39" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/AML_DrumIdentifier_April_v1$distill_train.coverage" NAME="distill_train Coverage Results" MODIFIED="1743778993106" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/PANNsTeachers" />
     <SUITE FILE_PATH="coverage/DataAugment_PedalBoardNew_py$main__One_Hot_.coverage" NAME="main (One-Hot) Coverage Results" MODIFIED="1743867459879" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/MFCC-CNN-OneHot" />
-    <SUITE FILE_PATH="coverage/DataAugment_PedalBoardNew_py$main.coverage" NAME="main Coverage Results" MODIFIED="1743944472215" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/MFCC-CNN" />
-    <SUITE FILE_PATH="coverage/DataAugment_PedalBoardNew_py$main_train_simclr.coverage" NAME="main_train_simclr Coverage Results" MODIFIED="1743945441933" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimCLR" />
+    <SUITE FILE_PATH="coverage/DataAugment_PedalBoardNew_py$main_train_simclr.coverage" NAME="main_train_simclr Coverage Results" MODIFIED="1743946481153" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimCLR" />
+    <SUITE FILE_PATH="coverage/DataAugment_PedalBoardNew_py$main.coverage" NAME="main Coverage Results" MODIFIED="1743949411843" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/MFCC-CNN" />
     <SUITE FILE_PATH="coverage/AML_DrumIdentifier_April_v1$main_train.coverage" NAME="main_train Coverage Results" MODIFIED="1743704243337" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/MFCC-CNN-OneHot" />
     <SUITE FILE_PATH="coverage/DataAugment_PedalBoardNew_py$run_simclr_training.coverage" NAME="run_simclr_training_cpu Coverage Results" MODIFIED="1743868797459" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimCLR" />
     <SUITE FILE_PATH="coverage/AML_DrumIdentifier_April_v1$evaluate_distill.coverage" NAME="evaluate_distill Coverage Results" MODIFIED="1743778747178" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/PANNsTeachers" />
@@ -384,6 +400,6 @@
     <SUITE FILE_PATH="coverage/AML_DrumIdentifier_April_v1$main__1_.coverage" NAME="main(distill) Coverage Results" MODIFIED="1743766564643" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/PANNsTeachers" />
     <SUITE FILE_PATH="coverage/DataAugment_PedalBoardNew_py$main_PANNs_.coverage" NAME="main(PANNs) Coverage Results" MODIFIED="1743944500204" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/PANNsTeachers" />
     <SUITE FILE_PATH="coverage/AML_DrumIdentifier_April_v1$main_train__1_.coverage" NAME="main_train (1) Coverage Results" MODIFIED="1743766825473" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/MFCC-CNN" />
-    <SUITE FILE_PATH="coverage/DataAugment_PedalBoardNew_py$main__SimCLR_.coverage" NAME="main (SimCLR) Coverage Results" MODIFIED="1743944484428" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimCLR" />
+    <SUITE FILE_PATH="coverage/DataAugment_PedalBoardNew_py$main__SimCLR_.coverage" NAME="main (SimCLR) Coverage Results" MODIFIED="1743949444696" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SimCLR" />
   </component>
 </project>

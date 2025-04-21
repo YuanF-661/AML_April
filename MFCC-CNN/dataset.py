@@ -46,7 +46,7 @@ class DrumDataset(Dataset):
 
 
 def create_dataset(data_path, sample_rate=22050, target_length=22050, train_ratio=0.7, val_ratio=0.15, test_ratio=0.15):
-    print(f"搜索音频文件: {data_path}")
+    print(f"Searching for Audio Files: {data_path}")
     mfcc_list, drum_types, drum_machines = [], [], []
 
     # 方法1: 递归搜索匹配 drum_type_machine_type 格式的文件夹
